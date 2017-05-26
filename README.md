@@ -1,9 +1,9 @@
-# node-logtify-logstash
+# logtify-logstash
 Logstash chain link for logtify logger
 
 ## Installation
 ```
-npm i -S logtify-logstash
+npm i -S @dialonce/logtify-logstash
 ```
 
 ## Usage
@@ -11,16 +11,16 @@ When requiring a [logtify](https://github.com/dial-once/node-logtify) module, in
 
 **Variant 1** (Settings passed as global logger settings:): 
 ```js
-const { LogstashChainLink } = require('logtify-logstash');
-const { chain, logger } = require('logtify')({
+const { LogstashChainLink } = require('@dialonce/logtify-logstash');
+const { chain, logger } = require('@dialonce/logtify')({
   chainLinks: [ LogentriesChainLink ]
 });
 ```
 
 **Variant 2** (Settings passed into a chain link wrapper):
 ```js
-const Logstash = require('logtify-logstash');
-const { chain, logger } = require('logtify')({
+const Logstash = require('@dialonce/logtify-logstash');
+const { chain, logger } = require('@dialonce/logtify')({
   chainLinks: [ Logstash({ /* CONFIG */ })]
 });
 

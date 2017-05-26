@@ -1,10 +1,8 @@
 const assert = require('assert');
 const sinon = require('sinon');
 const Logstash = require('../src/index');
-const { chain } = require('logtify')();
-
-const Message = chain.Message;
-const ChainLinkUtility = chain.Utility;
+const Message = require('./mocks/message');
+const ChainLinkUtility = require('./mocks/utility');
 
 describe('Logstash chain link ', () => {
   before(() => {

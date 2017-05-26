@@ -1,5 +1,5 @@
 {
-  "name": "logtify-logstash",
+  "name": "@dialonce/logtify-logstash",
   "version": "0.0.0",
   "description": "Logstash link chain for logtify logger",
   "main": "src/index.js",
@@ -26,7 +26,6 @@
     "eslint-plugin-jsx-a11y": "^2.2.3",
     "eslint-plugin-react": "^6.8.0",
     "istanbul": "^0.4.5",
-    "logtify": "file:///Users/macbook/Programming/JS/node-logtify",
     "mocha": "^3.2.0",
     "sinon": "^1.17.6"
   },
