@@ -24,11 +24,15 @@ class Logstash {
   constructor(configs, utility) {
     this.settings = configs || {};
     this.utility = utility;
-    this.winston = new winston.Logger();
-    this.winston.add(winston.transports.Logstash, {
-      port: 5000,
-      host: 'logstash.dialonce.net'
-    });
+    if (this.settings.LOGSTASH_HOST && this.settings.LOGSTASH_PORT) {
+      this.winston = new winston.Logger();
+      this.winston.add(winston.transports.Logstash, {
+        port: parseInt(this.settings.LOGSTASH_PORT, 10),
+        host: this.settings.LOGSTASH_HOST
+      });
+    } else {
+      console.warn('Logstash logging was not initialized due to a missing token');
+    }
     this.name = 'LOGSTASH';
   }
 
@@ -58,7 +62,7 @@ class Logstash {
     @return {boolean}
   **/
   isReady() {
-    return !!this.winston;
+    return this.winston !== undefined;
   }
 
   /**
@@ -104,7 +108,10 @@ class Logstash {
   @return { object } - chain link object with a class
 **/
 module.exports = (config) => {
-  const configs = Object.assign({}, config);
+  const configs = Object.assign({
+    LOGSTASH_HOST: process.env.LOGSTASH_HOST,
+    LOGSTASH_PORT: process.env.LOGSTASH_PORT
+  }, config);
   return {
     class: Logstash,
     config: configs

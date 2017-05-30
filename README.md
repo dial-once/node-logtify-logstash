@@ -13,6 +13,8 @@ When requiring a [logtify](https://github.com/dial-once/node-logtify) module, in
 ```js
 const { LogstashChainLink } = require('@dialonce/logtify-logstash');
 const { chain, logger } = require('@dialonce/logtify')({
+  LOGSTASH_PORT: 3000,
+  LOGSTASH_HOST: 'app.on.thenet',
   chainLinks: [ LogentriesChainLink ]
 });
 ```
@@ -21,7 +23,7 @@ const { chain, logger } = require('@dialonce/logtify')({
 ```js
 const Logstash = require('@dialonce/logtify-logstash');
 const { chain, logger } = require('@dialonce/logtify')({
-  chainLinks: [ Logstash({ /* CONFIG */ })]
+  chainLinks: [ Logstash({ LOGSTASH_HOST: 'app.on.thenet', LOGSTASH_PORT: 3000 })]
 });
 
 logger.log('error', new Error('Test error'));
@@ -33,12 +35,16 @@ The chainLink will make sure that a message will be sent to Logstash if:
 
 ## Configuration
 **Environment variables**:
+* ``process.env.LOGSTASH_HOST`` - logstash endpoint host
+* ``process.env.LOGSTASH_PORT`` - logstash endpoint port
 * ``process.env.LOGSTASH_LOGGING = 'true|false'`` - Switching on / off the chain link
 * ``process.env.MIN_LOG_LEVEL_LOGSTASH = 'silly|verbose|info|warn|error'``
 
 **Settings**:
 ```js
 {
+  LOGSTASH_HOST: 'app.on.thenet',
+  LOGSTASH_PORT: 3000,
   LOGSTASH_LOGGING: true|false,
   MIN_LOG_LEVEL_LOGSTASH: 'silly|verbose|info|warn|error'
 }
