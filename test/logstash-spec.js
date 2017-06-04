@@ -1,8 +1,9 @@
 const assert = require('assert');
 const sinon = require('sinon');
 const Logstash = require('../src/index');
-const Message = require('./mocks/message');
-const ChainLinkUtility = require('./mocks/utility');
+const { chain } = require('logtify')();
+
+const { Message } = chain;
 
 describe('Logstash chain link ', () => {
   before(() => {
@@ -44,12 +45,12 @@ describe('Logstash chain link ', () => {
   });
 
   it('should not throw if no settings are given', () => {
-    const logstash = new this.LogstashLink({}, new ChainLinkUtility());
+    const logstash = new this.LogstashLink({});
     assert.equal(logstash.winston, undefined);
   });
 
   it('should expose its main functions', () => {
-    const logstash = new this.LogstashLink({}, new ChainLinkUtility());
+    const logstash = new this.LogstashLink({});
     assert.equal(typeof logstash, 'object');
     assert.equal(typeof logstash.next, 'function');
     assert.equal(typeof logstash.isReady, 'function');
@@ -57,27 +58,23 @@ describe('Logstash chain link ', () => {
     assert.equal(typeof logstash.isReady, 'function');
     assert.equal(typeof logstash.isEnabled, 'function');
     assert.equal(typeof logstash.handle, 'function');
-    assert(logstash.utility);
-    assert.equal(typeof logstash.utility.getMinLogLevel, 'function');
-    assert(logstash.utility.logLevels);
-    assert(logstash.utility.logLevels instanceof Map);
   });
 
   it('should print out a warning if no token provided', () => {
     const spy = sinon.spy(console, 'warn');
-    const logstash = new this.LogstashLink({}, new ChainLinkUtility());
-    assert(spy.calledWith('Logstash logging was not initialized due to a missing token'));
+    const logstash = new this.LogstashLink({});
+    assert(spy.calledWith('Logstash logging was not initialized due to missing LOGSTASH_HOST or LOGSTASH_PORT'));
     assert.equal(logstash.winston, undefined);
   });
 
   it('should not be ready if no host provided', () => {
-    const logstash = new this.LogstashLink({ LOGSTASH_PORT: 3000 }, new ChainLinkUtility());
+    const logstash = new this.LogstashLink({ LOGSTASH_PORT: 3000 });
     assert(!logstash.isReady());
     assert.equal(logstash.winston, undefined);
   });
 
   it('should not be ready if no port provided', () => {
-    const logstash = new this.LogstashLink({ LOGSTASH_HOST: 'hello.world' }, new ChainLinkUtility());
+    const logstash = new this.LogstashLink({ LOGSTASH_HOST: 'hello.world' });
     assert(!logstash.isReady());
     assert.equal(logstash.winston, undefined);
   });
@@ -86,7 +83,7 @@ describe('Logstash chain link ', () => {
     const logstash = new this.LogstashLink({
       LOGSTASH_HOST: 'hello.world',
       LOGSTASH_PORT: 3000
-    }, new ChainLinkUtility());
+    });
     assert(logstash.isReady());
     assert.notEqual(logstash.winston, undefined);
   });
@@ -95,23 +92,23 @@ describe('Logstash chain link ', () => {
     process.env.LOGSTASH_HOST = 'hello.world';
     process.env.LOGSTASH_PORT = '3000';
     const chainLink = Logstash({});
-    const logstash = new this.LogstashLink(chainLink.config, new ChainLinkUtility());
+    const logstash = new this.LogstashLink(chainLink.config);
     assert.equal(logstash.isReady(), true);
     assert.notEqual(logstash.winston, undefined);
   });
 
   it('should indicate if it is switched on/off [settings]', () => {
-    let logstash = new this.LogstashLink({ LOGSTASH_LOGGING: true }, new ChainLinkUtility());
+    let logstash = new this.LogstashLink({ LOGSTASH_LOGGING: true });
     assert.equal(logstash.isEnabled(), true);
-    logstash = new this.LogstashLink({ LOGSTASH_LOGGING: false }, new ChainLinkUtility());
+    logstash = new this.LogstashLink({ LOGSTASH_LOGGING: false });
     assert.equal(logstash.isEnabled(), false);
-    logstash = new this.LogstashLink(null, new ChainLinkUtility());
-    assert.equal(logstash.isEnabled(), false);
+    logstash = new this.LogstashLink(null);
+    assert.equal(logstash.isEnabled(), true);
   });
 
   it('should indicate if it is switched on/off [envs]', () => {
-    const logstash = new this.LogstashLink(null, new ChainLinkUtility());
-    assert.equal(logstash.isEnabled(), false);
+    const logstash = new this.LogstashLink(null);
+    assert.equal(logstash.isEnabled(), true);
     process.env.LOGSTASH_LOGGING = true;
     assert.equal(logstash.isEnabled(), true);
     process.env.LOGSTASH_LOGGING = false;
@@ -119,7 +116,7 @@ describe('Logstash chain link ', () => {
   });
 
   it('should indicate if it is switched on/off [envs should have more privilege]', () => {
-    const logstash = new this.LogstashLink({ LOGSTASH_LOGGING: true }, new ChainLinkUtility());
+    const logstash = new this.LogstashLink({ LOGSTASH_LOGGING: true });
     assert.equal(logstash.isEnabled(), true);
     process.env.LOGSTASH_LOGGING = false;
     assert.equal(logstash.isEnabled(), false);
@@ -132,7 +129,7 @@ describe('Logstash chain link ', () => {
       LOGSTASH_HOST: 'hello.world',
       LOGSTASH_PORT: 3000,
       LOGSTASH_LOGGING: true
-    }, new ChainLinkUtility());
+    });
     logstash.handle(null);
   });
 
@@ -141,7 +138,7 @@ describe('Logstash chain link ', () => {
       LOGSTASH_HOST: 'hello.world',
       LOGSTASH_PORT: 3000,
       LOGSTASH_LOGGING: true
-    }, new ChainLinkUtility());
+    });
     const spy = sinon.spy(logstash.winston.log);
     logstash.winston.log = spy;
     const message = new Message();
@@ -154,7 +151,7 @@ describe('Logstash chain link ', () => {
       LOGSTASH_HOST: 'hello.world',
       LOGSTASH_PORT: 3000,
       LOGSTASH_LOGGING: false
-    }, new ChainLinkUtility());
+    });
     const spy = sinon.spy(logstash.winston, 'log');
     const message = new Message();
     logstash.handle(message);
@@ -167,7 +164,7 @@ describe('Logstash chain link ', () => {
       LOGSTASH_PORT: 3000,
       LOGSTASH_LOGGING: true,
       MIN_LOG_LEVEL: 'error'
-    }, new ChainLinkUtility());
+    });
     const spy = sinon.spy(logstash.winston.log);
     logstash.winston.log = spy;
     const message = new Message();
@@ -180,7 +177,7 @@ describe('Logstash chain link ', () => {
       LOGSTASH_HOST: 'hello.world',
       LOGSTASH_PORT: 3000,
       LOGSTASH_LOGGING: true
-    }, new ChainLinkUtility());
+    });
     const spy = sinon.spy(logstash.winston.log);
     logstash.winston.log = spy;
     const message = new Message();
@@ -194,7 +191,7 @@ describe('Logstash chain link ', () => {
       LOGSTASH_HOST: 'hello.world',
       LOGSTASH_PORT: 3000,
       LOGSTASH_LOGGING: true
-    }, new ChainLinkUtility());
+    });
     const spy = sinon.spy(logstash.winston.log);
     logstash.winston.log = spy;
     const message = new Message('warn');
@@ -209,7 +206,7 @@ describe('Logstash chain link ', () => {
       LOGSTASH_HOST: 'hello.world',
       LOGSTASH_PORT: 3000,
       LOGSTASH_LOGGING: true
-    }, new ChainLinkUtility());
+    });
     const spy = sinon.spy(logstash.winston.log);
     logstash.winston.log = spy;
     const message = new Message('error');
@@ -223,7 +220,7 @@ describe('Logstash chain link ', () => {
       LOGSTASH_HOST: 'hello.world',
       LOGSTASH_PORT: 3000,
       LOGSTASH_LOGGING: true
-    }, new ChainLinkUtility());
+    });
     const spy = sinon.spy(logstash.winston.log);
     logstash.winston.log = spy;
     const message = new Message('error');

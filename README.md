@@ -1,43 +1,32 @@
 # logtify-logstash
+[![CircleCI](https://circleci.com/gh/dial-once/node-logtify-logstash.svg?style=svg)](https://circleci.com/gh/dial-once/node-logtify-logstash)
+
 Logstash chain link for logtify logger
 
 ## Installation
 ```
-npm i -S @dialonce/logtify-logstash
+npm i -S logtify-logstash
 ```
 
 ## Usage
-When requiring a [logtify](https://github.com/dial-once/node-logtify) module, include it's chainLink into the chain
+Used with[logtify](https://github.com/dial-once/node-logtify) module.
 
-**Variant 1** (Settings passed as global logger settings:): 
 ```js
-const { LogstashChainLink } = require('@dialonce/logtify-logstash');
-const { chain, logger } = require('@dialonce/logtify')({
-  LOGSTASH_PORT: 3000,
-  LOGSTASH_HOST: 'app.on.thenet',
-  chainLinks: [ LogentriesChainLink ]
-});
-```
-
-**Variant 2** (Settings passed into a chain link wrapper):
-```js
-const Logstash = require('@dialonce/logtify-logstash');
-const { chain, logger } = require('@dialonce/logtify')({
-  chainLinks: [ Logstash({ LOGSTASH_HOST: 'app.on.thenet', LOGSTASH_PORT: 3000 })]
-});
-
+require('logtify-logstash')({ LOGSTASH_PORT: 3000, LOGSTASH_HOST: 'app.on.thenet' });
+const { chain, logger } = require('logtify')();
 logger.log('error', new Error('Test error'));
 logger.info('Hello world!');
 ```
+
 The chainLink will make sure that a message will be sent to Logstash if:
 * ``message.level >= 'MIN_LOG_LEVEL_LOGSTASH' || 'MIN_LOG_LEVEL'``
-* ``process.env.LOGSTASH_LOGGING === 'true' || settings.LOGSTASH_LOGGING === true``
+* ``process.env.LOGSTASH_LOGGING !== 'true' || settings.LOGSTASH_LOGGING !== true``
 
 ## Configuration
 **Environment variables**:
 * ``process.env.LOGSTASH_HOST`` - logstash endpoint host
 * ``process.env.LOGSTASH_PORT`` - logstash endpoint port
-* ``process.env.LOGSTASH_LOGGING = 'true|false'`` - Switching on / off the chain link
+* ``process.env.LOGSTASH_LOGGING = 'true|false'`` - Switching on / off the chain link. On by default
 * ``process.env.MIN_LOG_LEVEL_LOGSTASH = 'silly|verbose|info|warn|error'``
 
 **Settings**:
@@ -45,7 +34,7 @@ The chainLink will make sure that a message will be sent to Logstash if:
 {
   LOGSTASH_HOST: 'app.on.thenet',
   LOGSTASH_PORT: 3000,
-  LOGSTASH_LOGGING: true|false,
+  LOGSTASH_LOGGING: true|false, // true by default
   MIN_LOG_LEVEL_LOGSTASH: 'silly|verbose|info|warn|error'
 }
 ```

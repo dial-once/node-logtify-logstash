@@ -1,3 +1,5 @@
+/examples
+.DS_STORE
 .git
 node_modules
 coverage

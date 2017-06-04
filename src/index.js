@@ -1,5 +1,9 @@
 const winston = require('winston');
+const logtify = require('logtify');
 require('winston-logstash');
+
+const chainBuffer = logtify.chainBuffer;
+const { chain } = logtify();
 
 /**
   @class Logstash
@@ -8,22 +12,23 @@ require('winston-logstash');
   Has the following configurations (either env var or settings param):
   - LOGSTASH_LOGGING {'true'|'false'} - switches on / off the use of this chain link
   - MIN_LOG_LEVEL_LOGSTASH = {'silly'|'verbose'|'debug'|'info'|'warn'|'error'} - min log level of a message to log
+  - LOGSTASH_HOST { string } - logstash endpoint host
+  - LOGSTASH_PORT { number|string } - logstash tcp port
   This config has a higher priority than a global DEFAULT_LOG_LEVEl config
   @see ChainLink @class for info on the log level priorities
   If a message's level is >= than a MIN_LOG_LEVEL - it will be notified. Otherwise - skipped
 
   Environment variables have a higher priority over a settings object parameters
 **/
-class Logstash {
+class Logstash extends chain.ChainLink {
   /**
     @constructor
     Construct an instance of a Logstash @class
     @param configs {Object} - LoggerChain configuration object
-    @param utility {Object} - Logtify common rules object
   **/
-  constructor(configs, utility) {
+  constructor(configs) {
+    super();
     this.settings = configs || {};
-    this.utility = utility;
     if (this.settings.LOGSTASH_HOST && this.settings.LOGSTASH_PORT) {
       this.winston = new winston.Logger();
       this.winston.add(winston.transports.Logstash, {
@@ -31,30 +36,11 @@ class Logstash {
         host: this.settings.LOGSTASH_HOST
       });
     } else {
-      console.warn('Logstash logging was not initialized due to a missing token');
+      console.warn('Logstash logging was not initialized due to missing LOGSTASH_HOST or LOGSTASH_PORT');
     }
     this.name = 'LOGSTASH';
   }
 
-  /**
-    @function next
-    @param message {Object} - a message package object
-    Envoke the handle @function of the next chain link if provided
-  **/
-  next(message) {
-    if (this.nextLink) {
-      this.nextLink.handle(message);
-    }
-  }
-
-  /**
-    @function link
-    Links current chain link to a next chain link
-    @param nextLink {Object} - an optional next link for current chain link
-  **/
-  link(nextLink) {
-    this.nextLink = nextLink;
-  }
 
   /**
     @function isReady
@@ -73,8 +59,9 @@ class Logstash {
     @return {boolean} - if this chain link is switched on / off
   **/
   isEnabled() {
-    return ['true', 'false'].includes(process.env.LOGSTASH_LOGGING) ?
-      process.env.LOGSTASH_LOGGING === 'true' : !!this.settings.LOGSTASH_LOGGING;
+    const result = ['true', 'false'].includes(process.env.LOGSTASH_LOGGING) ?
+      process.env.LOGSTASH_LOGGING === 'true' : this.settings.LOGSTASH_LOGGING;
+    return [null, undefined].includes(result) ? true : result;
   }
 
   /**
@@ -91,10 +78,9 @@ class Logstash {
   handle(message) {
     if (this.isReady() && this.isEnabled() && message) {
       const content = message.payload;
-      const logLevels = this.utility.logLevels;
-      const messageLevel = logLevels.has(content.level) ? content.level : logLevels.get('default');
-      const minLogLevel = this.utility.getMinLogLevel(this.settings, this.name);
-      if (logLevels.get(messageLevel) >= logLevels.get(minLogLevel)) {
+      const messageLevel = this.logLevels.has(content.level) ? content.level : this.logLevels.get('default');
+      const minLogLevel = this.getMinLogLevel(this.settings, this.name);
+      if (this.logLevels.get(messageLevel) >= this.logLevels.get(minLogLevel)) {
         const prefix = message.getPrefix(this.settings);
         this.winston.log(messageLevel, `${prefix}${content.text}`, content.meta);
       }
@@ -112,10 +98,16 @@ module.exports = (config) => {
     LOGSTASH_HOST: process.env.LOGSTASH_HOST,
     LOGSTASH_PORT: process.env.LOGSTASH_PORT
   }, config);
-  return {
+  const chainLinkData = {
     class: Logstash,
     config: configs
   };
+
+  chainBuffer.addChainLink(chainLinkData);
+  const mergedConfigs = Object.assign({}, configs, chain.settings);
+  chain.push(new Logstash(mergedConfigs));
+
+  return chainLinkData;
 };
 
 module.exports.LogstashChainLink = Logstash;
