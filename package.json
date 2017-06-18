@@ -20,7 +20,7 @@
   },
   "homepage": "https://github.com/dial-once/node-logtify-logstash#readme",
   "dependencies": {
-    "logtify": "file:../node-logtify",
+    "logtify": "^1.0.0",
     "winston": "^2.3.1",
     "winston-logstash": "^0.3.0"
   },

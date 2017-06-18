@@ -1,7 +1,7 @@
 # logtify-logstash
 [![CircleCI](https://circleci.com/gh/dial-once/node-logtify-logstash.svg?style=svg)](https://circleci.com/gh/dial-once/node-logtify-logstash)
 
-Logstash chain link for logtify logger
+Logstash subscriber for logtify logger
 
 ## Installation
 ```
@@ -13,12 +13,12 @@ Used with[logtify](https://github.com/dial-once/node-logtify) module.
 
 ```js
 require('logtify-logstash')({ LOGSTASH_PORT: 3000, LOGSTASH_HOST: 'app.on.thenet' });
-const { chain, logger } = require('logtify')();
+const { stream, logger } = require('logtify')();
 logger.log('error', new Error('Test error'));
 logger.info('Hello world!');
 ```
 
-The chainLink will make sure that a message will be sent to Logstash if:
+The subscriber will make sure that a message will be sent to Logstash if:
 * ``message.level >= 'MIN_LOG_LEVEL_LOGSTASH' || 'MIN_LOG_LEVEL'``
 * ``process.env.LOGSTASH_LOGGING !== 'true' || settings.LOGSTASH_LOGGING !== true``
 
@@ -26,7 +26,7 @@ The chainLink will make sure that a message will be sent to Logstash if:
 **Environment variables**:
 * ``process.env.LOGSTASH_HOST`` - logstash endpoint host
 * ``process.env.LOGSTASH_PORT`` - logstash endpoint port
-* ``process.env.LOGSTASH_LOGGING = 'true|false'`` - Switching on / off the chain link. On by default
+* ``process.env.LOGSTASH_LOGGING = 'true|false'`` - Switching on / off the subscriber. On by default
 * ``process.env.MIN_LOG_LEVEL_LOGSTASH = 'silly|verbose|info|warn|error'``
 
 **Settings**:
