@@ -6,8 +6,8 @@ coverage
 test
 .sonar
 .gitignore
-.jshintignore
-.jshintrc
+.eslintignore
+.eslintrc
 .npmignore
 Makefile
 sonar-project.properties

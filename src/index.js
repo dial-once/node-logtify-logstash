@@ -2,29 +2,29 @@ const winston = require('winston');
 const logtify = require('logtify');
 require('winston-logstash');
 
-const chainBuffer = logtify.chainBuffer;
-const { chain } = logtify();
+const streamBuffer = logtify.streamBuffer;
+const { stream } = logtify();
 
 /**
   @class Logstash
-  A Logstash logger chain link
+  A Logstash logger subscriber
 
   Has the following configurations (either env var or settings param):
-  - LOGSTASH_LOGGING {'true'|'false'} - switches on / off the use of this chain link
+  - LOGSTASH_LOGGING {'true'|'false'} - switches on / off the use of this subscriber
   - MIN_LOG_LEVEL_LOGSTASH = {'silly'|'verbose'|'debug'|'info'|'warn'|'error'} - min log level of a message to log
   - LOGSTASH_HOST { string } - logstash endpoint host
   - LOGSTASH_PORT { number|string } - logstash tcp port
   This config has a higher priority than a global DEFAULT_LOG_LEVEl config
-  @see ChainLink @class for info on the log level priorities
+  @see Subscriber @class for info on the log level priorities
   If a message's level is >= than a MIN_LOG_LEVEL - it will be notified. Otherwise - skipped
 
   Environment variables have a higher priority over a settings object parameters
 **/
-class Logstash extends chain.ChainLink {
+class Logstash extends stream.Subscriber {
   /**
     @constructor
     Construct an instance of a Logstash @class
-    @param configs {Object} - LoggerChain configuration object
+    @param configs {Object} - LoggerStream configuration object
   **/
   constructor(configs) {
     super();
@@ -44,7 +44,7 @@ class Logstash extends chain.ChainLink {
 
   /**
     @function isReady
-    Check if a chain link is configured properly and is ready to be used
+    Check if a subscriber is configured properly and is ready to be used
     @return {boolean}
   **/
   isReady() {
@@ -53,10 +53,10 @@ class Logstash extends chain.ChainLink {
 
   /**
     @function isEnabled
-    Check if a chain link will be used
+    Check if a subscriber will be used
     Depends on configuration env variables / settings object parameters
     Checks LOGSTASH_LOGGING env / settings object param
-    @return {boolean} - if this chain link is switched on / off
+    @return {boolean} - if this subscriber is switched on / off
   **/
   isEnabled() {
     const result = ['true', 'false'].includes(process.env.LOGSTASH_LOGGING) ?
@@ -66,13 +66,13 @@ class Logstash extends chain.ChainLink {
 
   /**
     @function handle
-    Process a message and log it if the chain link is switched on and message's log level is >= than MIN_LOG_LEVEL
-    Finally, pass the message to the next chain link if any
+    Process a message and log it if the subscriber is switched on and message's log level is >= than MIN_LOG_LEVEL
+    Finally, pass the message to the next subscriber if any
     @param message {Object} - message package object
-    @see LoggerChain message package object structure description
+    @see LoggerStream message package object structure description
 
     This function is NOT ALLOWED to modify the message
-    This function HAS to invoke the next() @function and pass the message further along the chain
+    This function HAS to invoke the next() @function and pass the message further along the stream
     This function HAS to check message level priority and skip if lower than MIN_LOG_LEVEL
   **/
   handle(message) {
@@ -82,32 +82,34 @@ class Logstash extends chain.ChainLink {
       const minLogLevel = this.getMinLogLevel(this.settings, this.name);
       if (this.logLevels.get(messageLevel) >= this.logLevels.get(minLogLevel)) {
         const prefix = message.getPrefix(this.settings);
-        this.winston.log(messageLevel, `${prefix}${content.text}`, content.meta);
+        const messageText = !prefix.isEmpty ?
+          `[${prefix.timestamp}${prefix.environment}${prefix.logLevel}${prefix.reqId}]${content.text}` :
+          content.text;
+        this.winston.log(messageLevel, messageText, content.meta);
       }
     }
-    this.next(message);
   }
 }
 
 /**
-  @param config {Object} - chain link configuration
-  @return { object } - chain link object with a class
+  @param config {Object} - subscriber configuration
+  @return { object } - subscriber object with a class
 **/
 module.exports = (config) => {
   const configs = Object.assign({
     LOGSTASH_HOST: process.env.LOGSTASH_HOST,
     LOGSTASH_PORT: process.env.LOGSTASH_PORT
   }, config);
-  const chainLinkData = {
+  const streamLinkData = {
     class: Logstash,
     config: configs
   };
 
-  chainBuffer.addChainLink(chainLinkData);
-  const mergedConfigs = Object.assign({}, configs, chain.settings);
-  chain.push(new Logstash(mergedConfigs));
+  streamBuffer.addSubscriber(streamLinkData);
+  const mergedConfigs = Object.assign({}, configs, stream.settings);
+  stream.subscribe(new Logstash(mergedConfigs));
 
-  return chainLinkData;
+  return streamLinkData;
 };
 
-module.exports.LogstashChainLink = Logstash;
+module.exports.LogstashSubscriber = Logstash;
