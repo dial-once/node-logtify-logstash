@@ -1,0 +1,37 @@
+{
+  "name": "logtify-logstash",
+  "version": "0.0.0",
+  "description": "Logstash link chain for logtify logger",
+  "main": "src/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dial-once/node-logtify-logstash.git"
+  },
+  "author": "Dial Once",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dial-once/node-logtify-logstash/issues"
+  },
+  "homepage": "https://github.com/dial-once/node-logtify-logstash#readme",
+  "dependencies": {
+    "logtify": "^1.0.0",
+    "winston": "^2.3.1",
+    "winston-logstash": "^0.3.0"
+  },
+  "devDependencies": {
+    "eslint": "^3.16.1",
+    "eslint-config-airbnb": "^13.0.0",
+    "eslint-plugin-import": "^2.2.0",
+    "eslint-plugin-jsx-a11y": "^2.2.3",
+    "eslint-plugin-react": "^6.8.0",
+    "istanbul": "^0.4.5",
+    "mocha": "^3.2.0",
+    "sinon": "^1.17.6"
+  }
+}
