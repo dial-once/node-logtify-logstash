@@ -1,0 +1,13 @@
+/examples
+.DS_STORE
+.git
+node_modules
+coverage
+test
+.sonar
+.gitignore
+.eslintignore
+.eslintrc
+.npmignore
+Makefile
+sonar-project.properties
