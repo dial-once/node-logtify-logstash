@@ -35,9 +35,18 @@ class Logstash extends stream.Subscriber {
         port: parseInt(this.settings.LOGSTASH_PORT, 10),
         host: this.settings.LOGSTASH_HOST
       });
+      this.winston.transports.logstash.close();
     } else {
       console.warn('Logstash logging was not initialized due to missing LOGSTASH_HOST or LOGSTASH_PORT');
     }
+
+    this.cleanup = this.cleanup.bind(this);
+
+    process.once('exit', this.cleanup);
+    process.once('SIGINT', this.cleanup);
+    process.once('SIGTERM', this.cleanup);
+    process.once('uncaughtException', this.cleanup);
+
     this.name = 'LOGSTASH';
   }
 
@@ -77,6 +86,9 @@ class Logstash extends stream.Subscriber {
   **/
   handle(message) {
     if (this.isReady() && this.isEnabled() && message) {
+      if (!this.winston.transports.logstash.connected) {
+        this.winston.transports.logstash.connect();
+      }
       const content = message.payload;
       const messageLevel = this.logLevels.has(content.level) ? content.level : this.logLevels.get('default');
       const minLogLevel = this.getMinLogLevel(this.settings, this.name);
@@ -95,6 +107,14 @@ class Logstash extends stream.Subscriber {
         const metadata = jsonify ? message.stringifyMetadata() : content.meta;
         this.winston.log(messageLevel, messageText, metadata);
       }
+    } else if (this.isReady() && this.winston.transports.logstash.connected) {
+      this.winston.transports.logstash.close();
+    }
+  }
+
+  cleanup() {
+    if (this.isReady()) {
+      this.winston.transports.logstash.close();
     }
   }
 }
