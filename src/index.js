@@ -31,11 +31,6 @@ class Logstash extends stream.Subscriber {
     this.settings = configs || {};
     if (this.settings.LOGSTASH_HOST && this.settings.LOGSTASH_PORT) {
       this.winston = new winston.Logger();
-      this.winston.add(winston.transports.Logstash, {
-        port: parseInt(this.settings.LOGSTASH_PORT, 10),
-        host: this.settings.LOGSTASH_HOST
-      });
-      this.winston.transports.logstash.close();
     } else {
       console.warn('Logstash logging was not initialized due to missing LOGSTASH_HOST or LOGSTASH_PORT');
     }
@@ -60,6 +55,14 @@ class Logstash extends stream.Subscriber {
     return this.winston !== undefined;
   }
 
+  connect() {
+    if (!this.winston.transports.logstash) {
+      this.winston.add(winston.transports.Logstash, {
+        port: parseInt(this.settings.LOGSTASH_PORT, 10),
+        host: this.settings.LOGSTASH_HOST
+      });
+    }
+  }
   /**
     @function isEnabled
     Check if a subscriber will be used
@@ -86,9 +89,7 @@ class Logstash extends stream.Subscriber {
   **/
   handle(message) {
     if (this.isReady() && this.isEnabled() && message) {
-      if (!this.winston.transports.logstash.connected) {
-        this.winston.transports.logstash.connect();
-      }
+      this.connect();
       const content = message.payload;
       const messageLevel = this.logLevels.has(content.level) ? content.level : this.logLevels.get('default');
       const minLogLevel = this.getMinLogLevel(this.settings, this.name);
@@ -107,14 +108,13 @@ class Logstash extends stream.Subscriber {
         const metadata = jsonify ? message.stringifyMetadata() : content.meta;
         this.winston.log(messageLevel, messageText, metadata);
       }
-    } else if (this.isReady() && this.winston.transports.logstash.connected) {
-      this.winston.transports.logstash.close();
     }
   }
 
   cleanup() {
-    if (this.isReady()) {
+    if (this.isReady() && this.winston.transports.logstash) {
       this.winston.transports.logstash.close();
+      this.winston.remove(winston.transports.Logstash);
     }
   }
 }
