@@ -22,19 +22,62 @@ The subscriber will make sure that a message will be sent to Logstash if:
 * ``message.level >= 'MIN_LOG_LEVEL_LOGSTASH' || 'MIN_LOG_LEVEL'``
 * ``process.env.LOGSTASH_LOGGING !== 'true' || settings.LOGSTASH_LOGGING !== true``
 
-## Configuration
-**Environment variables**:
-* ``process.env.LOGSTASH_HOST`` - logstash endpoint host
-* ``process.env.LOGSTASH_PORT`` - logstash endpoint port
-* ``process.env.LOGSTASH_LOGGING = 'true|false'`` - Switching on / off the subscriber. On by default
-* ``process.env.MIN_LOG_LEVEL_LOGSTASH = 'silly|verbose|info|warn|error'``
+
+## Usage within child_process.fork()
+Since within child_process we need to pipe socket's tcp channel, the best way to manage logging is to transfer them via ipc channel:
+
+```js
+const cp = require('child_process');
+const { stream } = require('logtify')();
+
+// creating a forked process
+const process = cp.fork('<path>/some.js', [], {
+  env: { FORKED: true }
+});
+
+process.on('message', data => {
+  // passing message from child to logger
+  stream.log(data.level, data.message, ...data.meta)
+});
+
+```
+
+```js
+// some.js
+
+const { logger, stream } = require('logtify')();
+
+// if from forked process
+if (process.env.FORKED) {
+  stream.log = (level, message, ...meta) => {
+    // if ipc channel was not closed
+    if (process.channel) {
+      process.send({
+        level,
+        message,
+        meta: meta || []
+      });
+    }
+  };
+}
+
+
+logger.info('Hello world', { from: 'forked_process' });
+```
 
 **Settings**:
+Module can be configured by both env variables or config object. However, env variables have a higher priority.
 ```js
 {
   LOGSTASH_HOST: 'app.on.thenet',
   LOGSTASH_PORT: 3000,
   LOGSTASH_LOGGING: true|false, // true by default
-  MIN_LOG_LEVEL_LOGSTASH: 'silly|verbose|info|warn|error'
+  MIN_LOG_LEVEL_LOGSTASH: 'silly|verbose|info|warn|error',
+  LOG_TIMESTAMP = 'true'
+  LOG_ENVIRONMENT = 'true'
+  LOG_LEVEL = 'true'
+  LOG_REQID = 'true' // only included when provided with metadata
+  LOG_CALLER_PREFIX = 'true' // additional prefix with info about caller module/project/function
+  JSONIFY = 'true' // converts metadata to json
 }
 ```

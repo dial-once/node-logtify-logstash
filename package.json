@@ -1,13 +1,13 @@
 {
   "name": "logtify-logstash",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Logstash link chain for logtify logger",
   "main": "src/index.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "make test"
+    "test": "node_modules/.bin/istanbul cover  node_modules/.bin/_mocha -- test --recursive --timeout=3000"
   },
   "repository": {
     "type": "git",
@@ -20,7 +20,7 @@
   },
   "homepage": "https://github.com/dial-once/node-logtify-logstash#readme",
   "dependencies": {
-    "logtify": "^1.0.0",
+    "logtify": ">=1.1.0",
     "winston": "^2.3.1",
     "winston-logstash": "^0.3.0"
   },

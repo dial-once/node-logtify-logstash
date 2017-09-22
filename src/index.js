@@ -31,13 +31,17 @@ class Logstash extends stream.Subscriber {
     this.settings = configs || {};
     if (this.settings.LOGSTASH_HOST && this.settings.LOGSTASH_PORT) {
       this.winston = new winston.Logger();
-      this.winston.add(winston.transports.Logstash, {
-        port: parseInt(this.settings.LOGSTASH_PORT, 10),
-        host: this.settings.LOGSTASH_HOST
-      });
     } else {
       console.warn('Logstash logging was not initialized due to missing LOGSTASH_HOST or LOGSTASH_PORT');
     }
+
+    this.cleanup = this.cleanup.bind(this);
+
+    process.once('exit', this.cleanup);
+    process.once('SIGINT', this.cleanup);
+    process.once('SIGTERM', this.cleanup);
+    process.once('uncaughtException', this.cleanup);
+
     this.name = 'LOGSTASH';
   }
 
@@ -51,6 +55,14 @@ class Logstash extends stream.Subscriber {
     return this.winston !== undefined;
   }
 
+  connect() {
+    if (!this.winston.transports.logstash) {
+      this.winston.add(winston.transports.Logstash, {
+        port: parseInt(this.settings.LOGSTASH_PORT, 10),
+        host: this.settings.LOGSTASH_HOST
+      });
+    }
+  }
   /**
     @function isEnabled
     Check if a subscriber will be used
@@ -77,16 +89,32 @@ class Logstash extends stream.Subscriber {
   **/
   handle(message) {
     if (this.isReady() && this.isEnabled() && message) {
+      this.connect();
       const content = message.payload;
       const messageLevel = this.logLevels.has(content.level) ? content.level : this.logLevels.get('default');
       const minLogLevel = this.getMinLogLevel(this.settings, this.name);
       if (this.logLevels.get(messageLevel) >= this.logLevels.get(minLogLevel)) {
         const prefix = message.getPrefix(this.settings);
-        const messageText = !prefix.isEmpty ?
-          `[${prefix.timestamp}${prefix.environment}${prefix.logLevel}${prefix.reqId}]${content.text}` :
-          content.text;
-        this.winston.log(messageLevel, messageText, content.meta);
+        let prefixText = !prefix.isEmpty ?
+          `[${prefix.timestamp}${prefix.environment}${prefix.logLevel}${prefix.reqId}] ` : '';
+        // if prefix contains these props, then caller module prefix was configured by settings/env
+        if ({}.hasOwnProperty.call(prefix, 'module') &&
+            {}.hasOwnProperty.call(prefix, 'function') &&
+            {}.hasOwnProperty.call(prefix, 'project')) {
+          prefixText += `[${prefix.project}${prefix.module}${prefix.function}] `;
+        }
+        const messageText = `${prefixText}${content.text}`;
+        const jsonify = process.env.JSONIFY ? process.env.JSONIFY === 'true' : !!this.settings.JSONIFY;
+        const metadata = jsonify ? message.stringifyMetadata() : content.meta;
+        this.winston.log(messageLevel, messageText, metadata);
       }
+    }
+  }
+
+  cleanup() {
+    if (this.isReady() && this.winston.transports.logstash) {
+      this.winston.transports.logstash.close();
+      this.winston.remove(winston.transports.Logstash);
     }
   }
 }

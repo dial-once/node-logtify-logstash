@@ -1,7 +1,11 @@
 const assert = require('assert');
 const sinon = require('sinon');
 const Logstash = require('../src/index');
+require('logtify')({});
+require('logtify')({});
+require('logtify')({});
 const { stream } = require('logtify')();
+
 
 const { Message } = stream;
 
@@ -15,9 +19,6 @@ describe('Logstash subscriber ', () => {
     delete process.env.LOG_ENVIRONMENT;
     delete process.env.LOG_LEVEL;
     delete process.env.LOG_REQID;
-  });
-
-  beforeEach(() => {
     const logstashPackage = Logstash();
     this.LogstashSubscriber = logstashPackage.class;
   });
@@ -136,8 +137,7 @@ describe('Logstash subscriber ', () => {
       LOGSTASH_PORT: 3000,
       LOGSTASH_LOGGING: true
     });
-    const spy = sinon.spy(logstash.winston.log);
-    logstash.winston.log = spy;
+    const spy = sinon.spy(logstash.winston, 'log');
     const message = new Message();
     logstash.handle(message);
     assert(spy.called);
@@ -162,8 +162,7 @@ describe('Logstash subscriber ', () => {
       LOGSTASH_LOGGING: true,
       MIN_LOG_LEVEL: 'error'
     });
-    const spy = sinon.spy(logstash.winston.log);
-    logstash.winston.log = spy;
+    const spy = sinon.spy(logstash.winston, 'log');
     const message = new Message();
     logstash.handle(message);
     assert(!spy.called);
@@ -175,8 +174,7 @@ describe('Logstash subscriber ', () => {
       LOGSTASH_PORT: 3000,
       LOGSTASH_LOGGING: true
     });
-    const spy = sinon.spy(logstash.winston.log);
-    logstash.winston.log = spy;
+    const spy = sinon.spy(logstash.winston, 'log');
     const message = new Message();
     process.env.MIN_LOG_LEVEL = 'error';
     logstash.handle(message);
@@ -189,8 +187,7 @@ describe('Logstash subscriber ', () => {
       LOGSTASH_PORT: 3000,
       LOGSTASH_LOGGING: true
     });
-    const spy = sinon.spy(logstash.winston.log);
-    logstash.winston.log = spy;
+    const spy = sinon.spy(logstash.winston, 'log');
     const message = new Message('warn');
     process.env.MIN_LOG_LEVEL = 'error';
     process.env.MIN_LOG_LEVEL_LOGSTASH = 'warn';
@@ -204,8 +201,7 @@ describe('Logstash subscriber ', () => {
       LOGSTASH_PORT: 3000,
       LOGSTASH_LOGGING: true
     });
-    const spy = sinon.spy(logstash.winston.log);
-    logstash.winston.log = spy;
+    const spy = sinon.spy(logstash.winston, 'log');
     const message = new Message('error');
     process.env.MIN_LOG_LEVEL = 'error';
     logstash.handle(message);
@@ -218,11 +214,25 @@ describe('Logstash subscriber ', () => {
       LOGSTASH_PORT: 3000,
       LOGSTASH_LOGGING: true
     });
-    const spy = sinon.spy(logstash.winston.log);
-    logstash.winston.log = spy;
+    const spy = sinon.spy(logstash.winston, 'log');
     const message = new Message('error');
     process.env.MIN_LOG_LEVEL = 'warn';
     logstash.handle(message);
     assert(spy.called);
+  });
+
+  it('should jsonify message', () => {
+    const logstash = new this.LogstashSubscriber({
+      LOGSTASH_HOST: 'hello.world',
+      LOGSTASH_PORT: 3000,
+      LOGSTASH_LOGGING: true,
+      JSONIFY: true
+    });
+    const spy = sinon.spy(logstash.winston, 'log');
+    const message = new Message('error', 'Hello world', { hello: 'world', one: 1, two: '2' });
+    logstash.handle(message);
+    assert(spy.called);
+    assert.equal(spy.args[0][2],
+      `{"instanceId":"${message.payload.meta.instanceId}","hello":"world","one":1,"two":"2"}`);
   });
 });

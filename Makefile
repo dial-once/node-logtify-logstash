@@ -8,10 +8,10 @@ lint:
 
 test:
 	make lint
-	make cover
+	npm run test
 	
 cover:
-	node_modules/.bin/istanbul cover  node_modules/.bin/_mocha -- test --recursive --timeout=3000
+	make test
 
 sonar:
 	sed '/sonar.projectVersion/d' ./sonar-project.properties > tmp && mv tmp sonar-project.properties
