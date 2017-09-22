@@ -1,6 +1,6 @@
 {
   "name": "logtify-logstash",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Logstash link chain for logtify logger",
   "main": "src/index.js",
   "directories": {
