@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "node_modules/.bin/istanbul cover  node_modules/.bin/_mocha -- test --recursive --timeout=3000"
+    "test": "node_modules/.bin/istanbul cover  node_modules/.bin/_mocha -- test --recursive --timeout=3000 --exit"
   },
   "repository": {
     "type": "git",
@@ -27,11 +27,11 @@
   "devDependencies": {
     "eslint": "^3.16.1",
     "eslint-config-airbnb": "^13.0.0",
-    "eslint-plugin-import": "^2.2.0",
+    "eslint-plugin-import": "^2.13.0",
     "eslint-plugin-jsx-a11y": "^2.2.3",
     "eslint-plugin-react": "^6.8.0",
     "istanbul": "^0.4.5",
-    "mocha": "^3.2.0",
+    "mocha": "^5.2.0",
     "sinon": "^1.17.6"
   }
 }
