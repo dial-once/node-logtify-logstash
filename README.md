@@ -1,5 +1,12 @@
-# logtify-logstash
+# node-logtify-logstash
+
 [![CircleCI](https://circleci.com/gh/dial-once/node-logtify-logstash.svg?style=svg)](https://circleci.com/gh/dial-once/node-logtify-logstash)
+[![Sonar](http://proxy.dialonce.net/sonar/api/badges/gate?key=node-logtify-logstash)](http://sonar.dialonce.net/dashboard?id=node-logtify-logstash)
+[![Sonar](http://proxy.dialonce.net/sonar/api/badges/measure?key=node-logtify-logstash&metric=ncloc)](http://sonar.dialonce.net/dashboard?id=node-logtify-logstash)
+[![Sonar](http://proxy.dialonce.net/sonar/api/badges/measure?key=node-logtify-logstash&metric=coverage)](http://sonar.dialonce.net/dashboard?id=node-logtify-logstash)
+[![Sonar](http://proxy.dialonce.net/sonar/api/badges/measure?key=node-logtify-logstash&metric=code_smells)](http://proxy.dialonce.net/sonar/api/badges/measure?key=node-logtify-logstash&metric=coverage)
+[![Sonar](http://proxy.dialonce.net/sonar/api/badges/measure?key=node-logtify-logstash&metric=bugs)](http://sonar.dialonce.net/dashboard?id=node-logtify-logstash)
+[![Sonar](http://proxy.dialonce.net/sonar/api/badges/measure?key=node-logtify-logstash&metric=sqale_debt_ratio)](http://sonar.dialonce.net/dashboard?id=node-logtify-logstash)
 
 Logstash subscriber for logtify logger
 
