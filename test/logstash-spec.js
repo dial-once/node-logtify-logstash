@@ -1,10 +1,10 @@
+const { stream } = require('logtify')();
 const assert = require('assert');
 const sinon = require('sinon');
 const Logstash = require('../src/index');
 require('logtify')({});
 require('logtify')({});
 require('logtify')({});
-const { stream } = require('logtify')();
 
 
 const { Message } = stream;
