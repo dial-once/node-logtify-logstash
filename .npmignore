@@ -9,5 +9,6 @@ test
 .eslintignore
 .eslintrc
 .npmignore
+.nyc_output
 Makefile
 sonar-project.properties
