@@ -2,37 +2,37 @@ const winston = require('winston');
 const logtify = require('logtify');
 require('winston-logstash');
 
-const streamBuffer = logtify.streamBuffer;
+const { streamBuffer } = logtify;
 const { stream } = logtify();
 
 /**
-  @class Logstash
-  A Logstash logger subscriber
-
-  Has the following configurations (either env var or settings param):
-  - LOGSTASH_LOGGING {'true'|'false'} - switches on / off the use of this subscriber
-  - MIN_LOG_LEVEL_LOGSTASH = {'silly'|'verbose'|'debug'|'info'|'warn'|'error'} - min log level of a message to log
-  - LOGSTASH_HOST { string } - logstash endpoint host
-  - LOGSTASH_PORT { number|string } - logstash tcp port
-  This config has a higher priority than a global DEFAULT_LOG_LEVEl config
-  @see Subscriber @class for info on the log level priorities
-  If a message's level is >= than a MIN_LOG_LEVEL - it will be notified. Otherwise - skipped
-
-  Environment variables have a higher priority over a settings object parameters
-**/
+ * @class Logstash
+ * A Logstash logger subscriber
+ *
+ * Has the following configurations (either env var or settings param):
+ * - LOGSTASH_LOGGING {'true'|'false'} - switches on / off the use of this subscriber
+ * - MIN_LOG_LEVEL_LOGSTASH = {'silly'|'verbose'|'debug'|'info'|'warn'|'error'} - min log level of a message to log
+ * - LOGSTASH_HOST { string } - logstash endpoint host
+ * - LOGSTASH_PORT { number|string } - logstash tcp port
+ * This config has a higher priority than a global DEFAULT_LOG_LEVEl config
+ * @see Subscriber @class for info on the log level priorities
+ * If a message's level is >= than a MIN_LOG_LEVEL - it will be notified. Otherwise - skipped
+ *
+ * Environment variables have a higher priority over a settings object parameters
+ * */
 class Logstash extends stream.Subscriber {
   /**
-    @constructor
-    Construct an instance of a Logstash @class
-    @param configs {Object} - LoggerStream configuration object
-  **/
+   * @constructor
+   * Construct an instance of a Logstash @class
+   * @param configs {Object} - LoggerStream configuration object
+   * */
   constructor(configs) {
     super();
     this.settings = configs || {};
     if (this.settings.LOGSTASH_HOST && this.settings.LOGSTASH_PORT) {
       this.winston = new winston.Logger();
     } else {
-      console.warn('Logstash logging was not initialized due to missing LOGSTASH_HOST or LOGSTASH_PORT');
+      console.warn('Logstash logging was not initialized due to missing LOGSTASH_HOST or LOGSTASH_PORT'); // eslint-disable-line
     }
 
     this.cleanup = this.cleanup.bind(this);
@@ -47,10 +47,10 @@ class Logstash extends stream.Subscriber {
 
 
   /**
-    @function isReady
-    Check if a subscriber is configured properly and is ready to be used
-    @return {boolean}
-  **/
+   * @function isReady
+   * Check if a subscriber is configured properly and is ready to be used
+   * @return {boolean}
+   * */
   isReady() {
     return this.winston !== undefined;
   }
@@ -63,30 +63,31 @@ class Logstash extends stream.Subscriber {
       });
     }
   }
+
   /**
-    @function isEnabled
-    Check if a subscriber will be used
-    Depends on configuration env variables / settings object parameters
-    Checks LOGSTASH_LOGGING env / settings object param
-    @return {boolean} - if this subscriber is switched on / off
-  **/
+   * @function isEnabled
+   * Check if a subscriber will be used
+   * Depends on configuration env variables / settings object parameters
+   * Checks LOGSTASH_LOGGING env / settings object param
+   * @return {boolean} - if this subscriber is switched on / off
+   * */
   isEnabled() {
-    const result = ['true', 'false'].includes(process.env.LOGSTASH_LOGGING) ?
-      process.env.LOGSTASH_LOGGING === 'true' : this.settings.LOGSTASH_LOGGING;
+    const result = ['true', 'false'].includes(process.env.LOGSTASH_LOGGING)
+      ? process.env.LOGSTASH_LOGGING === 'true' : this.settings.LOGSTASH_LOGGING;
     return [null, undefined].includes(result) ? true : result;
   }
 
   /**
-    @function handle
-    Process a message and log it if the subscriber is switched on and message's log level is >= than MIN_LOG_LEVEL
-    Finally, pass the message to the next subscriber if any
-    @param message {Object} - message package object
-    @see LoggerStream message package object structure description
-
-    This function is NOT ALLOWED to modify the message
-    This function HAS to invoke the next() @function and pass the message further along the stream
-    This function HAS to check message level priority and skip if lower than MIN_LOG_LEVEL
-  **/
+   * @function handle
+   * Process a message and log it if the subscriber is switched on and message's log level is >= than MIN_LOG_LEVEL
+   * Finally, pass the message to the next subscriber if any
+   * @param message {Object} - message package object
+   * @see LoggerStream message package object structure description
+   *
+   * This function is NOT ALLOWED to modify the message
+   * This function HAS to invoke the next() @function and pass the message further along the stream
+   * This function HAS to check message level priority and skip if lower than MIN_LOG_LEVEL
+   * */
   handle(message) {
     if (this.isReady() && this.isEnabled() && message) {
       this.connect();
@@ -95,12 +96,12 @@ class Logstash extends stream.Subscriber {
       const minLogLevel = this.getMinLogLevel(this.settings, this.name);
       if (this.logLevels.get(messageLevel) >= this.logLevels.get(minLogLevel)) {
         const prefix = message.getPrefix(this.settings);
-        let prefixText = !prefix.isEmpty ?
-          `[${prefix.timestamp}${prefix.environment}${prefix.logLevel}${prefix.reqId}] ` : '';
+        let prefixText = !prefix.isEmpty
+          ? `[${prefix.timestamp}${prefix.environment}${prefix.logLevel}${prefix.reqId}] ` : '';
         // if prefix contains these props, then caller module prefix was configured by settings/env
-        if ({}.hasOwnProperty.call(prefix, 'module') &&
-            {}.hasOwnProperty.call(prefix, 'function') &&
-            {}.hasOwnProperty.call(prefix, 'project')) {
+        if ({}.hasOwnProperty.call(prefix, 'module')
+          && {}.hasOwnProperty.call(prefix, 'function')
+          && {}.hasOwnProperty.call(prefix, 'project')) {
           prefixText += `[${prefix.project}${prefix.module}${prefix.function}] `;
         }
         const messageText = `${prefixText}${content.text}`;
@@ -120,9 +121,9 @@ class Logstash extends stream.Subscriber {
 }
 
 /**
-  @param config {Object} - subscriber configuration
-  @return { object } - subscriber object with a class
-**/
+ * @param config {Object} - subscriber configuration
+ * @return { object } - subscriber object with a class
+ * */
 module.exports = (config) => {
   const configs = Object.assign({
     LOGSTASH_HOST: process.env.LOGSTASH_HOST,
