@@ -16,6 +16,7 @@ lib-cov
 
 # Coverage directory used by tools
 coverage
+.sonar/
 
 # nyc test coverage
 .nyc_output
