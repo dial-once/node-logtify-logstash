@@ -26,4 +26,4 @@ endif
 ifeq ($(CIRCLE_BRANCH),develop)
 	@sonar-scanner/bin/sonar-scanner -e -Dsonar.analysis.mode=publish -Dsonar.host.url=$(SONAR_HOST_URL) -Dsonar.login=$(SONAR_LOGIN) -Dsonar.password=$(SONAR_PASS)
 endif
-	rm -rf sonar-scanner
+	rm -rf sonar-scanner*
